@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CreateTripDialog from './_components/add-trip-dialog.svelte';
 	import { getTrips } from '../../lib/remotes/trip.remote';
+	import { ArrowRight, Plane } from '@lucide/svelte';
 </script>
 
 <div class="container mx-auto max-w-3xl">
@@ -23,8 +24,18 @@
 		{:else}
 			<ul>
 				{#each await getTrips() as { id, name }}
-					<li class="mb-4 rounded-lg border p-4 shadow-sm">
-						<a href={`/trips/${id}`} class="text-xl text-muted-foreground">{name}</a>
+					<li
+						class="group mb-4 cursor-pointer rounded-lg border-2 p-6 shadow-sm hover:border-primary"
+					>
+						<a
+							href={`/trips/${id}`}
+							class="flex items-center justify-between gap-2 text-2xl text-muted-foreground"
+						>
+							<span>{name}</span>
+							<ArrowRight
+								class="transition-transform group-hover:translate-x-1 group-hover:text-primary"
+							/>
+						</a>
 					</li>
 				{/each}
 			</ul>

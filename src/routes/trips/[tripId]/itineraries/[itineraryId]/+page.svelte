@@ -6,7 +6,7 @@
 	import DayItinerary from './_components/day-itinerary.svelte';
 	import GetStarted from './_components/get-started.svelte';
 
-	const itinerary = await getItinerary(page.params.itineraryId!);
+	const itinerary = $derived(await getItinerary(page.params.itineraryId!));
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 </script>
 

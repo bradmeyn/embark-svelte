@@ -1,23 +1,28 @@
-import { command, query } from '$app/server';
+import { command, query, form } from '$app/server';
 import { z } from 'zod';
 import { getCurrentUser } from '$lib/remotes/auth.remote';
 import { db } from '$db';
-import { itineraryTable, dayTable } from '$db/schemas/itinerary';
-import { and, eq } from 'drizzle-orm';
+import { itineraryTable } from '$db/schemas/itinerary';
+import { eq } from 'drizzle-orm';
 import { error } from '@sveltejs/kit';
 
 const itinerarySchema = z.object({
-	name: z.string().min(1, 'Name is required'),
-	description: z.string().min(1, 'Description is required')
+	tripId: z.string().min(1, 'Trip ID is required'),
+	name: z.string().min(1, 'Name is required')
 });
 
-export const getItineraries = query(async () => {
+export const getItineraries = query(z.string(), async (tripId: string) => {
 	const user = await getCurrentUser();
 	if (!user) {
 		error(401, 'Unauthorized');
 	}
 
-	const itineraries = await db.select().from(itineraryTable);
+	const itineraries = await db.query.itineraryTable.findMany({
+		where: eq(itineraryTable.tripId, tripId),
+		with: {
+			days: true
+		}
+	});
 
 	return itineraries;
 });
@@ -28,25 +33,46 @@ export const getItinerary = query(z.string(), async (id: string) => {
 		error(401, 'Unauthorized');
 	}
 
-	const [itinerary] = await db
-		.select()
-		.from(itineraryTable)
-		.where(and(eq(itineraryTable.id, id)))
-		.limit(1);
+	const itinerary = await db.query.itineraryTable.findFirst({
+		where: eq(itineraryTable.id, id),
+		with: {
+			days: {
+				with: {
+					activities: true
+				}
+			}
+		}
+	});
 
-	// fetch days for this itinerary
-	const days = await db
-		.select()
-		.from(dayTable)
-		.where(eq(dayTable.itineraryId, id))
-		.orderBy(dayTable.dayNumber);
-
-	// attach days to the itinerary object for convenience
-	return { ...itinerary, days };
+	if (!itinerary) {
+		error(404, 'Itinerary not found');
+	}
 });
 
-export const addItinerary = command(itinerarySchema, async () => {
+export const addItinerary = form(itinerarySchema, async (data) => {
 	const user = await getCurrentUser();
 	if (!user) error(401, 'Unauthorized');
+
+	const [itinerary] = await db
+		.insert(itineraryTable)
+		.values({
+			tripId: data.tripId,
+			name: data.name
+		})
+		.returning();
+
+	return { success: true, itinerary };
+});
+
+export const deleteItinerary = command(z.string(), async (id: string) => {
+	const user = await getCurrentUser();
+	if (!user) error(401, 'Unauthorized');
+
+	const itinerary = await db.delete(itineraryTable).where(eq(itineraryTable.id, id)).returning();
+
+	if (itinerary.length === 0) {
+		error(404, 'Itinerary not found');
+	}
+
 	return { success: true };
 });
