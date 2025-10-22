@@ -1,0 +1,1 @@
+ALTER TABLE "itinerary" DROP COLUMN "description";

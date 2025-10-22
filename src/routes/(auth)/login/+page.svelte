@@ -1,10 +1,9 @@
 <script lang="ts">
-	import sideImage from '$lib/assets/images/locations/nice.png';
 	import logo from '$lib/assets/logo-transparent.png';
 	import Button from '$lib/components/ui/button/button.svelte';
-
 	import * as Field from '$lib/components/ui/field';
 	import { Input } from '$lib/components/ui/input';
+	import { loginUser } from '../../../lib/remotes/auth.remote';
 </script>
 
 <div class="flex min-h-screen">
@@ -23,20 +22,35 @@
 			</div>
 
 			<div class="border-0 bg-transparent shadow-none">
-				<form action="">
+				<form {...loginUser}>
 					<Field.Set>
 						<Field.Field>
 							<Field.Label for="email">Email</Field.Label>
-							<Input id="email" type="email" autocomplete="off" placeholder="brad@example.com" />
+							<Input
+								{...loginUser.fields.email.as('email')}
+								autocomplete="off"
+								placeholder="brad@example.com"
+							/>
 							<Field.Error />
 						</Field.Field>
 						<Field.Field>
 							<Field.Label for="password">Password</Field.Label>
-							<Input id="password" type="password" autocomplete="off" placeholder="••••••••" />
+							<Input
+								{...loginUser.fields.password.as('password')}
+								type="password"
+								autocomplete="off"
+								placeholder="••••••••"
+							/>
 							<Field.Error />
 						</Field.Field>
 					</Field.Set>
-					<Button type="submit" class="mt-4 w-full">Create Account</Button>
+					<Button type="submit" class="mt-4 w-full">
+						{#if loginUser.pending}
+							Logging in...
+						{:else}
+							Log In
+						{/if}
+					</Button>
 				</form>
 			</div>
 

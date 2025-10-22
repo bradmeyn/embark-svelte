@@ -1,0 +1,97 @@
+import { pgTable, text, timestamp, uuid, varchar, integer } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { user } from './auth';
+
+const timesStamps = {
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+	updatedAt: timestamp('updated_at')
+		.defaultNow()
+		.notNull()
+		.$onUpdate(() => new Date())
+};
+
+const userId = text('user_id')
+	.notNull()
+	.references(() => user.id, { onDelete: 'cascade' });
+
+export const tripTable = pgTable('trip', {
+	id: uuid('id').defaultRandom().primaryKey(),
+	userId,
+	name: varchar('name', { length: 255 }).notNull(),
+	...timesStamps
+});
+
+export const itineraryTable = pgTable('itinerary', {
+	id: uuid('id').defaultRandom().primaryKey(),
+	// REMOVE userId here - get it from trip
+	name: varchar('name', { length: 255 }).notNull(),
+	tripId: uuid('trip_id')
+		.notNull()
+		.references(() => tripTable.id, { onDelete: 'cascade' }),
+	...timesStamps
+});
+
+export const dayTable = pgTable('day', {
+	id: uuid('id').defaultRandom().primaryKey(),
+	itineraryId: uuid('itinerary_id')
+		.notNull()
+		.references(() => itineraryTable.id, { onDelete: 'cascade' }),
+	dayNumber: integer('day_number').notNull(),
+	overview: text('overview'),
+	date: timestamp('date'),
+	location: varchar('location', { length: 255 }).notNull(),
+	country: varchar('country', { length: 255 }).notNull(),
+	// REMOVE userId here - get it from itinerary → trip
+	...timesStamps
+});
+
+export const activityTable = pgTable('activity', {
+	id: uuid('id').defaultRandom().primaryKey(),
+	dayId: uuid('day_id')
+		.notNull()
+		.references(() => dayTable.id, { onDelete: 'cascade' }),
+	name: varchar('name', { length: 255 }).notNull(),
+	description: text('description'),
+	time: timestamp('time'),
+	location: varchar('location', { length: 255 }),
+	cost: varchar('cost', { length: 100 }),
+	// REMOVE userId here - get it from day → itinerary → trip
+	...timesStamps
+});
+
+// Relations
+export const tripRelations = relations(tripTable, ({ many, one }) => ({
+	itineraries: many(itineraryTable),
+	user: one(user, {
+		fields: [tripTable.userId],
+		references: [user.id]
+	})
+}));
+
+export const itineraryRelations = relations(itineraryTable, ({ one, many }) => ({
+	trip: one(tripTable, {
+		fields: [itineraryTable.tripId],
+		references: [tripTable.id]
+	}),
+	days: many(dayTable)
+}));
+
+export const dayRelations = relations(dayTable, ({ one, many }) => ({
+	itinerary: one(itineraryTable, {
+		fields: [dayTable.itineraryId],
+		references: [itineraryTable.id]
+	}),
+	activities: many(activityTable)
+}));
+
+export const activityRelations = relations(activityTable, ({ one }) => ({
+	day: one(dayTable, {
+		fields: [activityTable.dayId],
+		references: [dayTable.id]
+	})
+}));
+
+export type Day = typeof dayTable.$inferSelect;
+export type Itinerary = typeof itineraryTable.$inferSelect;
+export type Activity = typeof activityTable.$inferSelect;
+export type Trip = typeof tripTable.$inferSelect;

@@ -1,0 +1,1 @@
+ALTER TABLE "trip" RENAME COLUMN "title" TO "name";
