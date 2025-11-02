@@ -1,35 +1,47 @@
 <script lang="ts">
 	import { getItinerary } from '$lib/remotes/itinerary.remote';
-	import { page } from '$app/state';
-	import LoadingSpinner from '$lib/components/loading-spinner.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import DayItinerary from './_components/day-itinerary.svelte';
 	import GetStarted from './_components/get-started.svelte';
-
-	const itinerary = $derived(await getItinerary(page.params.itineraryId!));
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
+	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
+	import { daysArraySchema } from '$lib/schemas/itinerary';
+	import AddDayDialog from './_components/add-day-dialog.svelte';
+
+	let { params } = $props();
+
+	const itinerary = $derived(await getItinerary(params.itineraryId));
+
+	$inspect(itinerary);
 </script>
 
-<div>
-	<h1 class="sr-only">Itinerary Details</h1>
-	<svelte:boundary>
-		{#snippet pending()}
-			<LoadingSpinner />
-		{/snippet}
-		<h1 class="mb-4 font-serif text-4xl font-light">{itinerary.name}</h1>
+<div class="container mx-auto max-w-3xl">
+	<div class="mb-4">
+		<Breadcrumb.Root>
+			<Breadcrumb.List>
+				<Breadcrumb.Item>
+					<Breadcrumb.Link href="/trips">Trips</Breadcrumb.Link>
+				</Breadcrumb.Item>
+				<Breadcrumb.Separator />
 
-		{#if !(itinerary?.days && itinerary.days.length)}
-			<GetStarted />
-		{:else}
-			<div class="mb-4 flex items-center justify-between">
-				<h2 class="text-xl font-semibold">Days</h2>
-				<Button>Add Destination</Button>
-			</div>
-			<Accordion.Root type="single" class="w-full sm:max-w-[70%]">
-				{#each itinerary.days as day}
-					<DayItinerary {day} />
-				{/each}
-			</Accordion.Root>
-		{/if}
-	</svelte:boundary>
+				<Breadcrumb.Item>
+					<Breadcrumb.Page>{itinerary.name}</Breadcrumb.Page>
+				</Breadcrumb.Item>
+			</Breadcrumb.List>
+		</Breadcrumb.Root>
+	</div>
+	<h1 class="mb-4 font-serif text-4xl font-light">{itinerary.name}</h1>
+	{#if itinerary.days.length > 1}
+		<AddDayDialog itineraryId={itinerary.id} dayNumber={itinerary.days.length + 1} />
+	{/if}
+
+	{#if itinerary.days.length === 0}
+		<GetStarted itineraryId={itinerary.id} />
+	{:else}
+		<Accordion.Root type="single" class="w-full ">
+			{#each itinerary.days as day}
+				<DayItinerary {day} />
+			{/each}
+		</Accordion.Root>
+	{/if}
 </div>

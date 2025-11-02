@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, varchar, integer } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, integer } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { user } from './auth';
 
@@ -17,14 +17,13 @@ const userId = text('user_id')
 export const tripTable = pgTable('trip', {
 	id: uuid('id').defaultRandom().primaryKey(),
 	userId,
-	name: varchar('name', { length: 255 }).notNull(),
+	name: text('name').notNull(),
 	...timesStamps
 });
 
 export const itineraryTable = pgTable('itinerary', {
 	id: uuid('id').defaultRandom().primaryKey(),
-	// REMOVE userId here - get it from trip
-	name: varchar('name', { length: 255 }).notNull(),
+	name: text('name').notNull(),
 	tripId: uuid('trip_id')
 		.notNull()
 		.references(() => tripTable.id, { onDelete: 'cascade' }),
@@ -39,9 +38,8 @@ export const dayTable = pgTable('day', {
 	dayNumber: integer('day_number').notNull(),
 	overview: text('overview'),
 	date: timestamp('date'),
-	location: varchar('location', { length: 255 }).notNull(),
-	country: varchar('country', { length: 255 }).notNull(),
-	// REMOVE userId here - get it from itinerary → trip
+	location: text('location').notNull(),
+
 	...timesStamps
 });
 
@@ -50,11 +48,11 @@ export const activityTable = pgTable('activity', {
 	dayId: uuid('day_id')
 		.notNull()
 		.references(() => dayTable.id, { onDelete: 'cascade' }),
-	name: varchar('name', { length: 255 }).notNull(),
+	name: text('name').notNull(),
 	description: text('description'),
 	time: timestamp('time'),
-	location: varchar('location', { length: 255 }),
-	cost: varchar('cost', { length: 100 }),
+	location: text('location'),
+	cost: text('cost'),
 	// REMOVE userId here - get it from day → itinerary → trip
 	...timesStamps
 });

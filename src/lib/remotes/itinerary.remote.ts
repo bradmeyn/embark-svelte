@@ -47,6 +47,8 @@ export const getItinerary = query(z.string(), async (id: string) => {
 	if (!itinerary) {
 		error(404, 'Itinerary not found');
 	}
+
+	return itinerary;
 });
 
 export const addItinerary = form(itinerarySchema, async (data) => {

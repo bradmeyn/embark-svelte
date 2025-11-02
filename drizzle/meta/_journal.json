@@ -71,6 +71,13 @@
       "when": 1761019377085,
       "tag": "0009_messy_scrambler",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1761451820029,
+      "tag": "0010_goofy_zaladane",
+      "breakpoints": true
     }
   ]
 }

@@ -1,15 +1,20 @@
 <script lang="ts">
-	import Button, { buttonVariants } from '$lib/components/ui/button/button.svelte';
-
+	import Button from '$lib/components/ui/button/button.svelte';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import * as Field from '$lib/components/ui/field';
 	import { addDays } from '$lib/remotes/day.remote';
 	import LoadingSpinner from '$lib/components/loading-spinner.svelte';
-	import { page } from '$app/state';
-	import { daysArraySchema } from '$lib/schemas/itinerary';
-	import { Trash } from '@lucide/svelte';
 
-	// start with 3 day input rows
+	import { Plus, Trash } from '@lucide/svelte';
+	import { getItinerary } from '$lib/remotes/itinerary.remote';
+	import { daysArraySchema } from '$lib/schemas/itinerary';
+
+	let {
+		itineraryId
+	}: {
+		itineraryId: string;
+	} = $props();
+
 	let days = $state([0, 1, 2]);
 
 	function addMore() {
@@ -22,83 +27,89 @@
 	}
 </script>
 
-<div class="space-y-4">
-	<header>
-		<h2 class="text-2xl font-semibold">Get started — add your first days</h2>
-		<p class="text-muted-foreground">Provide 1 or more days to get your itinerary going.</p>
+<div class="space-y-6 rounded-xl border border-orange-100 bg-orange-50 p-6 shadow-sm">
+	<header class="space-y-2">
+		<h2 class="font-serif text-3xl font-light text-orange-900">Get started</h2>
+		<p class=" text-muted-foreground">Add days to your itinerary to begin planning your trip.</p>
+
+		{#each addDays.fields.issues() as issue}
+			<p class="text-sm text-red-600">{issue.message}</p>
+		{/each}
 	</header>
 
-	<form {...addDays.preflight(daysArraySchema)} class="space-y-4">
+	<form
+		{...addDays.preflight(daysArraySchema).enhance(async ({ form, data, submit }) => {
+			try {
+				console.log('data:', data);
+				addDays.validate({ includeUntouched: true });
+				const issues = addDays.fields.allIssues();
+				console.log('issues:', issues);
+				await submit();
+				form.reset();
+				await getItinerary(itineraryId).refresh();
+			} catch (error) {
+				console.error(error);
+			}
+		})}
+		class="space-y-3"
+	>
 		{#each days as _, i (i)}
-			<div class="rounded border p-3">
-				<div class="grid grid-cols-1 items-end gap-3 sm:grid-cols-3">
-					<Field.Field>
-						<Field.Label for={`days-${i}-dayNumber`}>Day Number</Field.Label>
-						<Input
-							{...addDays.fields.days[i].dayNumber.as('number')}
-							value={i + 1}
-							placeholder="1"
-							disabled={addDays.pending > 1}
-						/>
-						<Field.Error />
-					</Field.Field>
+			<div class="group rounded-lg bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
+				<div class="flex items-start gap-3">
+					<div
+						class="flex h-10 w-16 flex-shrink-0 items-center justify-center rounded-md bg-orange-100 text-sm font-semibold text-primary"
+					>
+						Day {i + 1}
+					</div>
 
-					<Field.Field>
-						<Field.Label for={`days-${i}-location`}>Location</Field.Label>
+					<Field.Field class="flex-1">
+						<Field.Label for={`days-${i}-location`} class="text-xs font-medium text-gray-700">
+							Location
+						</Field.Label>
 						<Input
 							{...addDays.fields.days[i].location.as('text')}
-							placeholder="Tokyo"
+							placeholder="e.g., Tokyo, Paris, New York"
 							disabled={addDays.pending > 1}
+							class="placeholder:text-gray-400"
 						/>
 						<Field.Error />
 					</Field.Field>
 
-					<Field.Field>
-						<Field.Label for={`days-${i}-country`}>Country</Field.Label>
-						<Input
-							id={`days-${i}-country`}
-							name={`days[${i}].country`}
-							autocomplete="off"
-							placeholder="Japan"
-							disabled={addDays.pending > 1}
-						/>
-						<Field.Error />
-					</Field.Field>
-				</div>
-
-				<!-- hidden itineraryId per day -->
-				<input type="hidden" name={`days[${i}].itineraryId`} value={page.params.itineraryId} />
-
-				<div class="mt-2 flex justify-end">
-					<Button size="icon-sm" onclick={() => removeAt(i)} disabled={addDays.pending > 1}>
-						<Trash />
+					<Button
+						size="icon-sm"
+						onclick={() => removeAt(i)}
+						disabled={addDays.pending > 1 || days.length <= 1}
+						variant="ghost"
+					>
+						<Trash class="h-4 w-4" />
 					</Button>
 				</div>
+
+				<!-- hidden fields -->
+				<input {...addDays.fields.days[i].dayNumber.as('number')} class="hidden" value={i + 1} />
+				<input type="hidden" name={`days[${i}].itineraryId`} value={itineraryId} />
 			</div>
 		{/each}
 
-		<div class="flex items-center justify-between">
-			<button
-				type="button"
-				class="text-sm underline"
+		<div class="flex items-center justify-between pt-2">
+			<Button
+				size="sm"
 				onclick={addMore}
 				disabled={addDays.pending > 1}
+				variant="outline"
+				class="gap-2 border-orange-200 text-primary hover:bg-orange-50"
 			>
-				Add another day
-			</button>
+				<Plus class="h-4 w-4" />
+				Add Another Day
+			</Button>
 
-			<div class="flex space-x-2">
-				<Button type="submit" disabled={addDays.pending > 1}>
-					{#if addDays.pending}
-						<LoadingSpinner />
-					{:else}
-						Create Days
-					{/if}
-				</Button>
-				<Button type="button" variant="outline" onclick={() => /* no-op inline cancel */ null}
-					>Cancel</Button
-				>
-			</div>
+			<Button type="submit" disabled={addDays.pending > 1}>
+				{#if addDays.pending}
+					<LoadingSpinner />
+				{:else}
+					Add Days
+				{/if}
+			</Button>
 		</div>
 	</form>
 </div>

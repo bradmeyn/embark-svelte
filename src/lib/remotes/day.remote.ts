@@ -4,9 +4,9 @@ import { getCurrentUser } from '$lib/remotes/auth.remote';
 import { db } from '$db';
 import { dayTable } from '$db/schemas/itinerary';
 import { error } from '@sveltejs/kit';
-import { daySchema } from '$lib/schemas/itinerary';
+import { daySchema, daysArraySchema } from '$lib/schemas/itinerary';
 
-export const addDay = form(daySchema, async ({ location, country, itineraryId, dayNumber }) => {
+export const addDay = form(daySchema, async ({ location, itineraryId, dayNumber }) => {
 	const user = await getCurrentUser();
 	if (!user) error(401, 'Unauthorized');
 
@@ -15,7 +15,7 @@ export const addDay = form(daySchema, async ({ location, country, itineraryId, d
 		.values({
 			dayNumber,
 			location,
-			country,
+
 			itineraryId
 		})
 		.returning();
@@ -29,10 +29,12 @@ export const getDays = query(z.string(), async () => {
 		error(401, 'Unauthorized');
 	}
 	const days = await db.select().from(dayTable);
+
 	return days;
 });
 
-export const addDays = form(z.object({ days: z.array(daySchema) }), async ({ days }) => {
+export const addDays = form(daysArraySchema, async ({ days }) => {
+	console.log('Adding days:', days);
 	const user = await getCurrentUser();
 	if (!user) {
 		error(401, 'Unauthorized');
@@ -41,10 +43,9 @@ export const addDays = form(z.object({ days: z.array(daySchema) }), async ({ day
 	const inserted = await db
 		.insert(dayTable)
 		.values(
-			days.map(({ dayNumber, location, country, itineraryId }) => ({
+			days.map(({ dayNumber, location, itineraryId }) => ({
 				dayNumber,
 				location,
-				country,
 				itineraryId,
 				userId: user.id
 			}))

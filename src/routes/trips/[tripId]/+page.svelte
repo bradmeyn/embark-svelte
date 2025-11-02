@@ -1,52 +1,53 @@
 <script lang="ts">
 	import { getTrip } from '$lib/remotes/trip.remote';
 	import { page } from '$app/state';
-
-	const trip = $derived(await getTrip(page.params.tripId!));
 	import AddItinerary from './_components/add-itinerary.svelte';
+	import * as Breadcrumb from '$lib/components/ui/breadcrumb';
+	const trip = $derived(await getTrip(page.params.tripId!));
 </script>
 
-<div class="container mx-auto max-w-3xl py-16">
-	<svelte:boundary>
-		{#snippet pending()}
-			<div role="status" class="animate-pulse space-y-6" aria-hidden="false">
-				<span class="sr-only">Loading itineraries...</span>
+<div class="container mx-auto max-w-3xl">
+	<div class="mb-4">
+		<Breadcrumb.Root>
+			<Breadcrumb.List>
+				<Breadcrumb.Item>
+					<Breadcrumb.Link href="/trips">Trips</Breadcrumb.Link>
+				</Breadcrumb.Item>
+				<Breadcrumb.Separator />
+				<Breadcrumb.Item>
+					<Breadcrumb.Page>{trip.name}</Breadcrumb.Page>
+				</Breadcrumb.Item>
+			</Breadcrumb.List>
+		</Breadcrumb.Root>
+	</div>
+	<h1 class="mb-4 font-serif text-4xl font-light">{trip.name} Itineraries</h1>
 
-				<!-- heading skeleton -->
-				<div class="h-10 w-3/5 rounded bg-gray-200 dark:bg-gray-700"></div>
+	{#if trip.itineraries.length === 0}
+		<div class="my-8 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-6 text-center">
+			<h2 class="mb-2 text-2xl font-semibold">No itineraries yet</h2>
+			<p class="mx-auto mb-4 max-w-md text-sm text-muted-foreground">
+				Plan your trip by creating an itinerary. You can add days, activities, and share the plan
+				with others.
+			</p>
+			<AddItinerary tripId={page.params.tripId!} />
+		</div>
+	{/if}
 
-				<!-- list skeleton -->
-				<ul class="space-y-4">
-					{#each Array(3) as _, i}
-						<li class="mb-4 rounded-lg border p-4 shadow-sm">
-							<div class="h-4 w-2/3 rounded bg-gray-200 dark:bg-gray-700"></div>
-							<div class="mt-2 h-3 w-1/3 rounded bg-gray-200 dark:bg-gray-700"></div>
-						</li>
-					{/each}
-				</ul>
-			</div>
-		{/snippet}
-		<h1 class="font-serif text-3xl font-light">{trip.name} Itineraries</h1>
-
-		{#if trip.itineraries.length === 0}
-			<h2>No Itineraries Yet</h2>
-			<p>You haven't created any itineraries yet</p>
-		{/if}
-
-		<ul>
-			{#each trip.itineraries as itinerary}
-				<li>
-					<a
-						href={`/trips/${trip.id}/itineraries/${itinerary.id}`}
-						class="mb-4 block rounded-lg border p-4 text-muted-foreground shadow-sm hover:border-primary"
-						><h2>{itinerary.name}</h2>
-						<small>
-							{itinerary.days.length} Days
-						</small>
-					</a>
-				</li>
-			{/each}
-		</ul>
-	</svelte:boundary>
-	<AddItinerary tripId={page.params.tripId!} />
+	<ul>
+		{#each trip.itineraries as itinerary}
+			<li>
+				<a
+					href={`/trips/${trip.id}/itineraries/${itinerary.id}`}
+					class="mb-4 block rounded-lg border p-4 text-muted-foreground shadow-sm hover:border-primary"
+					><h2 class="font-serif text-2xl">{itinerary.name}</h2>
+					<small>
+						{itinerary.days.length > 1 ? `${itinerary.days.length} Days` : '1 Day'}
+					</small>
+				</a>
+			</li>
+		{/each}
+	</ul>
+	{#if trip.itineraries.length > 0}
+		<AddItinerary tripId={page.params.tripId!} />
+	{/if}
 </div>

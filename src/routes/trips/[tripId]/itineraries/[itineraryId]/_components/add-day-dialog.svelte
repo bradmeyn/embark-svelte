@@ -6,6 +6,14 @@
 	import { addDay } from '$lib/remotes/day.remote';
 	import LoadingSpinner from '$lib/components/loading-spinner.svelte';
 
+	let {
+		itineraryId,
+		dayNumber
+	}: {
+		itineraryId: string;
+		dayNumber: number;
+	} = $props();
+
 	let isOpen = $state(false);
 </script>
 

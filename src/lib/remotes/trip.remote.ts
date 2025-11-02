@@ -39,6 +39,7 @@ export const getTrip = query(z.string(), async (id: string) => {
 			}
 		}
 	});
+	console.log('trip', trip);
 
 	if (!trip) {
 		error(404, 'Trip not found');
@@ -48,8 +49,6 @@ export const getTrip = query(z.string(), async (id: string) => {
 	if (trip.userId !== user.id) {
 		error(403, 'Forbidden');
 	}
-
-	console.log('Trip data:', trip);
 
 	return trip;
 });

@@ -5,7 +5,7 @@
 </script>
 
 <Accordion.Item value={`day-${day.id}`}>
-	<Accordion.Trigger>{day.dayNumber}: {day.location}, {day.country}</Accordion.Trigger>
+	<Accordion.Trigger>Day {day.dayNumber}: {day.location}</Accordion.Trigger>
 	<Accordion.Content class="flex flex-col gap-4 text-balance">
 		{#if day.overview}
 			<h2 class="text-2xl font-semibold">Overview: {day.overview}</h2>

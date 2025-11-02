@@ -20,7 +20,7 @@ export const registerUser = form(
 			};
 		}
 
-		redirect(302, '/itineraries');
+		redirect(302, '/trips');
 	}
 );
 
@@ -39,7 +39,7 @@ export const loginUser = form(loginSchema, async ({ email, password }) => {
 		};
 	}
 
-	redirect(302, '/itineraries');
+	redirect(302, '/trips');
 });
 
 export const logoutUser = form(async () => {
