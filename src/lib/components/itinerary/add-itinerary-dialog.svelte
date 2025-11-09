@@ -4,7 +4,8 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import * as Field from '$lib/components/ui/field';
 	import { addItinerary } from '$lib/remotes/itinerary.remote';
-	import LoadingSpinner from '$lib/components/loading-spinner.svelte';
+	import Spinner from '../ui/spinner/spinner.svelte';
+	import { Plus } from '@lucide/svelte';
 
 	let { tripId }: { tripId: string } = $props();
 
@@ -12,7 +13,10 @@
 </script>
 
 <Dialog.Root bind:open={isOpen}>
-	<Dialog.Trigger class={buttonVariants({ variant: 'default' })}>Create Itinerary</Dialog.Trigger>
+	<Dialog.Trigger class="flex items-center gap-2">
+		<Plus class="size-4" />
+		<span>Add Itinerary</span>
+	</Dialog.Trigger>
 	<Dialog.Content>
 		<Dialog.Header>
 			<Dialog.Title>Create a New Itinerary</Dialog.Title>
@@ -34,13 +38,13 @@
 			})}
 		>
 			<Field.Field>
-				<Field.Label for="name">Trip Name</Field.Label>
+				<Field.Label for="name">Itinerary Name</Field.Label>
 				<Input
 					id="name"
 					{...addItinerary.fields.name.as('text')}
 					autocomplete="off"
-					placeholder="Japan 2025"
-					disabled={addItinerary.pending > 1}
+					placeholder="Tokyo & Kyoto"
+					disabled={!!addItinerary.pending}
 				/>
 				<Field.Error />
 				{#each addItinerary.fields.name.issues() as issue}
@@ -52,9 +56,9 @@
 
 			<div class="mt-4 flex justify-end">
 				<Dialog.Footer>
-					<Button type="submit" disabled={addItinerary.pending > 1}>
+					<Button type="submit" disabled={!!addItinerary.pending}>
 						{#if addItinerary.pending}
-							<LoadingSpinner />
+							<Spinner class="size-4" />
 						{:else}
 							Create Itinerary
 						{/if}

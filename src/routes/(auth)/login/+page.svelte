@@ -3,19 +3,19 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Field from '$lib/components/ui/field';
 	import { Input } from '$lib/components/ui/input';
-	import { loginUser } from '../../../lib/remotes/auth.remote';
+	import { loginUser } from '$lib/remotes/auth.remote';
 </script>
 
 <div class="flex min-h-screen">
-	<div class="flex flex-1 items-center justify-center">
+	<div class="flex flex-1 justify-center">
 		<div class="w-full max-w-md space-y-2">
 			<div class="flex items-center justify-center">
 				<img src={logo} alt="Embark Logo" class="size-20" />
-				<p class=" font-serif text-3xl text-orange-800">Embark</p>
+				<p class=" font-serif text-3xl text-primary">Embark</p>
 			</div>
 
 			<div class="space-y-2 text-center">
-				<h1 class="text-xl font-bold text-gray-900">Welcome back</h1>
+				<h1 class=" text-2xl font-bold">Login</h1>
 				<p class="text-muted-foreground">
 					Log in to your account to continue planning amazing trips
 				</p>

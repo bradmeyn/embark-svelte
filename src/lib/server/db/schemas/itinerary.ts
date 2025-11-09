@@ -92,4 +92,13 @@ export const activityRelations = relations(activityTable, ({ one }) => ({
 export type Day = typeof dayTable.$inferSelect;
 export type Itinerary = typeof itineraryTable.$inferSelect;
 export type Activity = typeof activityTable.$inferSelect;
+
 export type Trip = typeof tripTable.$inferSelect;
+export type NewTrip = typeof tripTable.$inferInsert;
+
+// Trip with relations
+export type TripWithItineraries = Trip & {
+	itineraries: (Itinerary & {
+		days: Day[];
+	})[];
+};

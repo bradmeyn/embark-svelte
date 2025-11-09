@@ -12,18 +12,25 @@ const tripSchema = z.object({
 
 export const getTrips = query(async () => {
 	const user = await getCurrentUser();
-	if (!user) {
-		error(401, 'Unauthorized');
-	}
-	const trips = await db.select().from(tripTable).where(eq(tripTable.userId, user.id));
+	if (!user) error(401, 'Unauthorized');
+
+	const trips = await db.query.tripTable.findMany({
+		where: eq(tripTable.userId, user.id),
+		with: {
+			itineraries: {
+				with: {
+					days: true
+				}
+			}
+		}
+	});
+
 	return trips;
 });
 
 export const getTrip = query(z.string(), async (id: string) => {
 	const user = await getCurrentUser();
-	if (!user) {
-		error(401, 'Unauthorized');
-	}
+	if (!user) error(401, 'Unauthorized');
 
 	const trip = await db.query.tripTable.findFirst({
 		where: eq(tripTable.id, id),
@@ -39,7 +46,6 @@ export const getTrip = query(z.string(), async (id: string) => {
 			}
 		}
 	});
-	console.log('trip', trip);
 
 	if (!trip) {
 		error(404, 'Trip not found');
@@ -71,3 +77,65 @@ export const addTrip = form(tripSchema, async ({ name }) => {
 	});
 	return { success: true };
 });
+
+export const editTrip = form(
+	z.object({
+		id: z.string(),
+		name: z.string().min(1, 'Name is required')
+	}),
+	async ({ id, name }) => {
+		console.log('Editing trip:', id, name);
+		await new Promise((resolve) => setTimeout(resolve, 3000)); // Simulate delay
+
+		const user = await getCurrentUser();
+		if (!user) error(401, 'Unauthorized');
+
+		const trip = await db.query.tripTable.findFirst({
+			where: eq(tripTable.id, id)
+		});
+
+		if (!trip) {
+			error(404, 'Trip not found');
+		}
+
+		// Check if user owns this trip
+		if (trip.userId !== user.id) {
+			error(403, 'Forbidden');
+		}
+
+		const [updatedTrip] = await db
+			.update(tripTable)
+			.set({ name })
+			.where(eq(tripTable.id, id))
+			.returning();
+
+		return { success: true, updatedTrip };
+	}
+);
+
+export const deleteTrip = form(
+	z.object({
+		id: z.string()
+	}),
+	async ({ id }) => {
+		const user = await getCurrentUser();
+		if (!user) error(401, 'Unauthorized');
+
+		const trip = await db.query.tripTable.findFirst({
+			where: eq(tripTable.id, id)
+		});
+
+		if (!trip) {
+			error(404, 'Trip not found');
+		}
+
+		// Check if user owns this trip
+		if (trip.userId !== user.id) {
+			error(403, 'Forbidden');
+		}
+
+		await db.delete(tripTable).where(eq(tripTable.id, id));
+
+		return { success: true };
+	}
+);

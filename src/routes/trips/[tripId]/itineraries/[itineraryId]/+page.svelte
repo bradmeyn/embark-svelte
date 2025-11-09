@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { getItinerary } from '$lib/remotes/itinerary.remote';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import DayItinerary from './_components/day-itinerary.svelte';
-	import GetStarted from './_components/get-started.svelte';
+	import DayItinerary from '$lib/components/itinerary/day-itinerary.svelte';
+	import GetStarted from '$lib/components/itinerary/get-started.svelte';
 	import * as Accordion from '$lib/components/ui/accordion/index.js';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import { daysArraySchema } from '$lib/schemas/itinerary';
-	import AddDayDialog from './_components/add-day-dialog.svelte';
+	import AddDayDialog from '$lib/components/itinerary/add-day-dialog.svelte';
 
 	let { params } = $props();
 
@@ -30,11 +30,12 @@
 			</Breadcrumb.List>
 		</Breadcrumb.Root>
 	</div>
-	<h1 class="mb-4 font-serif text-4xl font-light">{itinerary.name}</h1>
-	{#if itinerary.days.length > 1}
-		<AddDayDialog itineraryId={itinerary.id} dayNumber={itinerary.days.length + 1} />
-	{/if}
-
+	<div class="flex items-start justify-between">
+		<h1 class="mb-4 font-serif text-4xl font-light">{itinerary.name}</h1>
+		{#if itinerary.days.length > 1}
+			<AddDayDialog itineraryId={itinerary.id} dayCount={itinerary.days.length} />
+		{/if}
+	</div>
 	{#if itinerary.days.length === 0}
 		<GetStarted itineraryId={itinerary.id} />
 	{:else}

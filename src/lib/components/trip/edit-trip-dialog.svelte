@@ -3,56 +3,65 @@
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import Input from '$lib/components/ui/input/input.svelte';
 	import * as Field from '$lib/components/ui/field';
-	import { addTrip } from '$lib/remotes/trip.remote';
-	import LoadingSpinner from '$lib/components/loading-spinner.svelte';
+	import { editTrip, getTrips } from '$lib/remotes/trip.remote';
+	import Spinner from '../ui/spinner/spinner.svelte';
+	import { Pencil } from '@lucide/svelte';
+	import type { TripWithItineraries } from '$db/schemas/itinerary';
+
+	let { trip }: { trip: TripWithItineraries } = $props();
 
 	let isOpen = $state(false);
 </script>
 
 <Dialog.Root bind:open={isOpen}>
-	<Dialog.Trigger class={buttonVariants({ variant: 'default' })}>Create Trip</Dialog.Trigger>
+	<Dialog.Trigger class="flex items-center gap-2">
+		<Pencil class="size-4" />
+		<span>Edit Trip</span>
+	</Dialog.Trigger>
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Create a New Trip</Dialog.Title>
-			<Dialog.Description>Please provide a name for your trip.</Dialog.Description>
+			<Dialog.Title>Edit Trip</Dialog.Title>
 		</Dialog.Header>
 
 		<form
-			{...addTrip.enhance(async ({ form, submit }) => {
+			{...editTrip.enhance(async ({ submit, data }) => {
 				try {
-					await submit();
-					form.reset();
+					await submit().updates(getTrips());
 
-					if (addTrip.result?.success) {
+					if (editTrip.result) {
 						isOpen = false;
+					} else {
+						alert('Failed to update trip.');
 					}
 				} catch (error) {
 					console.error('Error creating trip:', error);
 				}
 			})}
 		>
+			<input type="hidden" name="id" value={trip.id} />
 			<Field.Field>
 				<Field.Label for="name">Trip Name</Field.Label>
 				<Input
 					id="name"
-					{...addTrip.fields.name.as('text')}
+					{...editTrip.fields.name.as('text')}
 					autocomplete="off"
 					placeholder="Japan 2025"
-					disabled={addTrip.pending > 1}
+					value={trip.name}
+					disabled={!!editTrip.pending}
 				/>
 				<Field.Error />
-				{#each addTrip.fields.name.issues() as issue}
+				{#each editTrip.fields.name.issues() as issue}
 					<Field.Error>{issue.message}</Field.Error>
 				{/each}
 			</Field.Field>
 
 			<div class="mt-4 flex justify-end">
 				<Dialog.Footer>
-					<Button type="submit" disabled={addTrip.pending > 1}>
-						{#if addTrip.pending}
-							<LoadingSpinner />
+					<Button type="submit" disabled={!!editTrip.pending}>
+						{#if !!editTrip.pending}
+							<Spinner class="size-4" />
 						{:else}
-							Create Trip
+							Update Trip
 						{/if}
 					</Button>
 					<Button type="button" variant="outline" onclick={() => (isOpen = false)}>Cancel</Button>

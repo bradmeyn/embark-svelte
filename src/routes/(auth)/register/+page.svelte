@@ -15,7 +15,7 @@
 		</div>
 	</div>
 
-	<div class="flex flex-1 items-center justify-center">
+	<div class="mt-14 flex flex-1 justify-center">
 		<div class="w-full max-w-md space-y-2">
 			<div class="flex items-center justify-center">
 				<img src={logo} alt="Embark Logo" class="size-20" />

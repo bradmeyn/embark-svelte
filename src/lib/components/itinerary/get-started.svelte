@@ -3,11 +3,9 @@
 	import Input from '$lib/components/ui/input/input.svelte';
 	import * as Field from '$lib/components/ui/field';
 	import { addDays } from '$lib/remotes/day.remote';
-	import LoadingSpinner from '$lib/components/loading-spinner.svelte';
+	import Spinner from '../ui/spinner/spinner.svelte';
 
 	import { Plus, Trash } from '@lucide/svelte';
-	import { getItinerary } from '$lib/remotes/itinerary.remote';
-	import { daysArraySchema } from '$lib/schemas/itinerary';
 
 	let {
 		itineraryId
@@ -37,22 +35,7 @@
 		{/each}
 	</header>
 
-	<form
-		{...addDays.preflight(daysArraySchema).enhance(async ({ form, data, submit }) => {
-			try {
-				console.log('data:', data);
-				addDays.validate({ includeUntouched: true });
-				const issues = addDays.fields.allIssues();
-				console.log('issues:', issues);
-				await submit();
-				form.reset();
-				await getItinerary(itineraryId).refresh();
-			} catch (error) {
-				console.error(error);
-			}
-		})}
-		class="space-y-3"
-	>
+	<form {...addDays} class="space-y-3">
 		{#each days as _, i (i)}
 			<div class="group rounded-lg bg-white p-4 shadow-sm transition-shadow hover:shadow-md">
 				<div class="flex items-start gap-3">
@@ -69,7 +52,7 @@
 						<Input
 							{...addDays.fields.days[i].location.as('text')}
 							placeholder="e.g., Tokyo, Paris, New York"
-							disabled={addDays.pending > 1}
+							disabled={!!addDays.pending}
 							class="placeholder:text-gray-400"
 						/>
 						<Field.Error />
@@ -78,7 +61,7 @@
 					<Button
 						size="icon-sm"
 						onclick={() => removeAt(i)}
-						disabled={addDays.pending > 1 || days.length <= 1}
+						disabled={!!addDays.pending || days.length <= 1}
 						variant="ghost"
 					>
 						<Trash class="h-4 w-4" />
@@ -95,7 +78,7 @@
 			<Button
 				size="sm"
 				onclick={addMore}
-				disabled={addDays.pending > 1}
+				disabled={!!addDays.pending}
 				variant="outline"
 				class="gap-2 border-orange-200 text-primary hover:bg-orange-50"
 			>
@@ -103,9 +86,9 @@
 				Add Another Day
 			</Button>
 
-			<Button type="submit" disabled={addDays.pending > 1}>
+			<Button type="submit" disabled={!!addDays.pending}>
 				{#if addDays.pending}
-					<LoadingSpinner />
+					<Spinner class="size-4" />
 				{:else}
 					Add Days
 				{/if}

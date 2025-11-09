@@ -5,6 +5,7 @@ import { db } from '$db';
 import { dayTable } from '$db/schemas/itinerary';
 import { error } from '@sveltejs/kit';
 import { daySchema, daysArraySchema } from '$lib/schemas/itinerary';
+import { eq } from 'drizzle-orm';
 
 export const addDay = form(daySchema, async ({ location, itineraryId, dayNumber }) => {
 	const user = await getCurrentUser();
@@ -15,7 +16,6 @@ export const addDay = form(daySchema, async ({ location, itineraryId, dayNumber 
 		.values({
 			dayNumber,
 			location,
-
 			itineraryId
 		})
 		.returning();
@@ -34,7 +34,6 @@ export const getDays = query(z.string(), async () => {
 });
 
 export const addDays = form(daysArraySchema, async ({ days }) => {
-	console.log('Adding days:', days);
 	const user = await getCurrentUser();
 	if (!user) {
 		error(401, 'Unauthorized');
@@ -51,5 +50,20 @@ export const addDays = form(daysArraySchema, async ({ days }) => {
 			}))
 		)
 		.returning();
+	await getDays(days[0].itineraryId);
 	return inserted;
 });
+
+export const deleteDay = form(
+	z.object({ dayId: z.string() }),
+	async ({ dayId }: { dayId: string }) => {
+		const user = await getCurrentUser();
+		if (!user) {
+			error(401, 'Unauthorized');
+		}
+
+		const day = await db.delete(dayTable).where(eq(dayTable.id, dayId)).returning();
+
+		return { success: true, day };
+	}
+);
