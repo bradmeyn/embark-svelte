@@ -1,37 +1,29 @@
-import devtoolsJson from 'vite-plugin-devtools-json';
-import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vitest/config';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+import tailwindcss from '@tailwindcss/vite';
+import adapter from '@sveltejs/adapter-auto';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit(), devtoolsJson()],
-	test: {
-		expect: { requireAssertions: true },
-		projects: [
-			{
-				extends: './vite.config.ts',
-				test: {
-					name: 'client',
-					environment: 'browser',
-					browser: {
-						enabled: true,
-						provider: 'playwright',
-						instances: [{ browser: 'chromium' }]
-					},
-					include: ['src/**/*.svelte.{test,spec}.{js,ts}'],
-					exclude: ['src/lib/server/**'],
-					setupFiles: ['./vitest-setup-client.ts']
+	plugins: [
+		sveltekit({
+			preprocess: vitePreprocess(),
+			compilerOptions: {
+				experimental: {
+					async: true
 				}
 			},
-			{
-				extends: './vite.config.ts',
-				test: {
-					name: 'server',
-					environment: 'node',
-					include: ['src/**/*.{test,spec}.{js,ts}'],
-					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
-				}
-			}
-		]
-	}
+			alias: {
+				$db: 'src/lib/server/db',
+				$ui: 'src/lib/components/ui',
+				$utils: 'src/lib/utils',
+				$constants: 'src/lib/constants'
+			},
+			experimental: {
+				remoteFunctions: true
+			},
+			adapter: adapter()
+		}),
+		tailwindcss()
+	]
 });
